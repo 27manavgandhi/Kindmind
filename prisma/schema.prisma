@@ -1,0 +1,119 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+    provider = "prisma-client-js"
+}
+
+datasource db {
+    provider = "postgresql"
+    url      = env("DATABASE_URL")
+}
+
+model User {
+    id        String   @id @default(cuid())
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
+
+    clerkId String @unique
+
+    journal_entries  JournalEntry[]
+    events           Event[]
+    entries          Entry[]
+    emotion_entries  EmotionEntry[]
+    habits           Habit__saved[]
+    habits_completed Habit__completed[]
+}
+
+model Entry {
+    id        String   @id @default(cuid())
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
+
+    userId String?
+    user   User?   @relation(fields: [userId], references: [id])
+
+    mood   Int
+    events Event[]
+    notes  String?
+}
+
+enum CoreEmotionType {
+    JOY
+    SURPRISE
+    SADNESS
+    ANGER
+    FEAR
+    LOVE
+}
+
+model EmotionEntry {
+    id        String   @id @default(cuid())
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
+
+    userId String?
+    user   User?   @relation(fields: [userId], references: [id])
+
+    name         String
+    core_emotion CoreEmotionType
+    intensity    Int
+    notes        String?
+}
+
+model Habit__saved {
+    id        String   @id @default(cuid())
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
+
+    userId String?
+    user   User?   @relation(fields: [userId], references: [id])
+
+    name           String
+    description    String?
+    days_completed Habit__completed[]
+}
+
+model Habit__completed {
+    id          String   @id @default(cuid())
+    completedAt DateTime @default(now())
+
+    userId String?
+    user   User?   @relation(fields: [userId], references: [id])
+
+    habitId String
+    habit   Habit__saved @relation(fields: [habitId], references: [id])
+}
+
+enum EventType {
+    SELF_CARE
+    ACTIVITY
+    HEALTH
+    WORK
+}
+
+model Event {
+    id        String    @id @default(cuid())
+    createdAt DateTime  @default(now())
+    updatedAt DateTime  @updatedAt
+    type      EventType
+    name      String
+
+    userId String?
+    user   User?   @relation(fields: [userId], references: [id])
+
+    entryId String
+    entry   Entry  @relation(fields: [entryId], references: [id])
+}
+
+model JournalEntry {
+    id        String   @id @default(cuid())
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
+
+    userId String?
+    user   User?   @relation(fields: [userId], references: [id])
+
+    title   String @db.VarChar(255)
+    content String @db.Text
+}
